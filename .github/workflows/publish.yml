@@ -1,0 +1,81 @@
+name: Publish to GitHub NPM Registry
+
+on:
+  create:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Publish Package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Use Node.js 25.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: '25.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cortex-ia-com-co'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract version from tag
+        id: tag_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "📦 Tag: $TAG_NAME -> Version: $VERSION"
+
+      - name: Verify package.json version matches tag
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${{ steps.tag_version.outputs.version }}"
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ Error: package.json version ($PACKAGE_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "✅ Version match: $PACKAGE_VERSION"
+
+      - name: Build library
+        run: |
+          npm install -g @angular/cli
+          ng build common --configuration production
+
+      - name: Prepare package for publish
+        run: |
+          cd dist
+          if [ -f ../README.md ]; then
+            cp ../README.md .
+          fi
+          if [ -f package.json ]; then
+            node -e "
+              const pkg = require('./package.json');
+              pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
+              pkg.repository = { type: 'git', url: 'https://github.com/cortex-ia-com-co/unosportclub-common.git' };
+              require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));
+            "
+          fi
+          echo "✅ Package prepared in dist/"
+
+      - name: Publish to GitHub NPM Registry
+        working-directory: dist
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify publication
+        run: |
+          PACKAGE_NAME="@cortex-ia-com-co/common"
+          VERSION="${{ steps.tag_version.outputs.version }}"
+          echo "🔍 Verifying package $PACKAGE_NAME@$VERSION is published..."
+          npm view "$PACKAGE_NAME@$VERSION" version || echo "⚠️ Package may take a few moments to appear in registry"

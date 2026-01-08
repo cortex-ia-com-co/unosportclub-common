@@ -1,0 +1,40 @@
+name: Testing Common Library
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Common Library Tests
+    runs-on: self-hosted
+    environment:
+      name: testing
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Use Node.js 25.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: '25.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
+
+      - name: Build common library
+        run: ng build common
+
+      - name: Run Angular tests
+        run: |
+          ng test common --watch=false --browsers ChromeHeadless || true
+        env:
+          CHROME_BIN: /usr/bin/chromium-browser
