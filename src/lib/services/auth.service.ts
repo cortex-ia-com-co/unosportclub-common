@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import {
   Auth,
   EmailAuthProvider,
@@ -14,7 +14,7 @@ import {
   updatePassword,
   updateProfile,
 } from '@angular/fire/auth';
-import { Observable, from, switchMap, BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, Observable, from, switchMap } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export interface AuthClientInterface {
@@ -95,7 +95,7 @@ export class AuthService {
     }
 
     user
-      .getIdTokenResult()
+      .getIdTokenResult(true)
       .then((tokenResult) => {
         const claims = tokenResult.claims;
         const permissions: Permissions = {
