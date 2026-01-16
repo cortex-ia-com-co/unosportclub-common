@@ -35,6 +35,6 @@ jobs:
 
       - name: Run Angular tests
         run: |
-          ng test common --watch=false --browsers ChromeHeadless || true
+          ng test common --watch=false --browsers ChromeHeadlessCI || true
         env:
           CHROME_BIN: /usr/bin/chromium-browser
