@@ -41,7 +41,7 @@ jobs:
           repository: cortex-ia-com-co/unosportclub
           path: main-repo
           ref: develop
-          token: ${{ secrets.PAT_MONOREPO_ACCESS }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Use Node.js 24.x
         uses: actions/setup-node@v6
