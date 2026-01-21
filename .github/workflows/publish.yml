@@ -65,13 +65,13 @@ jobs:
           if [ -f package.json ]; then
             node -e "
               const pkg = require('./package.json');
-              pkg.publishConfig = { 
+              pkg.publishConfig = {
                 registry: 'https://npm.pkg.github.com',
                 access: 'restricted'
               };
-              pkg.repository = { 
-                type: 'git', 
-                url: 'git+https://github.com/cortex-ia-com-co/unosportclub-common.git' 
+              pkg.repository = {
+                type: 'git',
+                url: 'git+https://github.com/cortex-ia-com-co/unosportclub-common.git'
               };
               require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));
             "
@@ -82,7 +82,7 @@ jobs:
         run: npm publish
         working-directory: ./dist
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.PAT_MONOREPO_ACCESS }}
 
       - name: Verify publication
         run: |
