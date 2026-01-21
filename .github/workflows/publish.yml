@@ -5,14 +5,14 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write
 jobs:
   publish:
     name: Publish Package
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
 
     steps:
       - name: Checkout code
@@ -70,6 +70,9 @@ jobs:
               require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));
             "
           fi
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+          echo "@cortex-ia-com-co:registry=https://npm.pkg.github.com/" >> .npmrc
+          echo "always-auth=true" >> .npmrc
           echo "✅ Package prepared in dist/"
 
       - name: Publish to GitHub NPM Registry
