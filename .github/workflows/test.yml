@@ -57,6 +57,11 @@ jobs:
           cd main-repo
           npm ci
 
+      - name: Install Angular CLI
+        run: |
+          cd main-repo
+          npm install -g @angular/cli
+
       - name: Copy common project to main repo
         run: |
           rm -rf main-repo/projects/common
