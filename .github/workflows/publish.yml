@@ -46,10 +46,11 @@ jobs:
           fi
           echo "✅ Version match: $PACKAGE_VERSION"
 
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
+
       - name: Build library
-        run: |
-          npm install -g @angular/cli
-          ng build common --configuration production
+        run: ng build common --configuration production
 
       - name: Prepare package for publish
         run: |
