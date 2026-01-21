@@ -25,9 +25,7 @@ jobs:
           scope: '@cortex-ia-com-co'
 
       - name: Install dependencies
-        run: |
-          npm install
-          npm install --save-dev @angular/build ng-packagr typescript @angular/compiler @angular/compiler-cli
+        run: npm install
 
       - name: Extract version from tag
         id: tag_version
