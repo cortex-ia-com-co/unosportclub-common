@@ -25,11 +25,10 @@ jobs:
           scope: '@cortex-ia-com-co'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install peer dependencies for build
-        run: |
-          npm install --save-peer @angular/fire@^20.0.0 socket.io-client@^4.8.0 || npm install --no-save @angular/fire@^20.0.0 socket.io-client@^4.8.0
+        run: npm install --no-save --legacy-peer-deps @angular/fire@^20.0.0 socket.io-client@^4.8.0
 
       - name: Extract version from tag
         id: tag_version
