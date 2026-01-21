@@ -4,10 +4,11 @@
   "description": "Common library for Unosportclub Angular projects",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cortex-ia-com-co/unosportclub-common.git"
+    "url": "git+https://github.com/cortex-ia-com-co/unosportclub-common.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
   },
   "peerDependencies": {
     "@angular/common": "^21.0.0",
