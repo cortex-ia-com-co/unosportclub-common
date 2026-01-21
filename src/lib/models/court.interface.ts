@@ -1,8 +1,8 @@
 export interface CourtInterface {
-  id?: number;
+  id: number;
   court_type_id: number;
   name: string;
-  cost?: number;
-  price?: number;
+  cost: number;
+  price: number;
   court_type_name?: string | null;
 }

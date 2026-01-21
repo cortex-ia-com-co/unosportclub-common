@@ -6,6 +6,6 @@ export interface PaymentInterface {
   transaction_id: string | null;
   gateway_response?: string | null;
   status: boolean;
-  date: string | null;
+  date: string;
   description?: string | null;
 }

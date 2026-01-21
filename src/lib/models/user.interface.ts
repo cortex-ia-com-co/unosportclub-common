@@ -16,11 +16,16 @@ export interface FirebaseUserInterface {
   uid: string;
   email: string;
   emailVerified: boolean;
-  displayName?: string;
+  displayName: string;
   disabled: boolean;
+  role?: 'admin' | 'operator' | 'sudo' | 'trainer' | null;
+  trainer: boolean;
+  operator: boolean;
+  admin: boolean;
+  sudo: boolean;
   metadata: {
-    creationTime?: string;
-    lastSignInTime?: string;
+    creationTime: string;
+    lastSignInTime: string;
   };
 }
 

@@ -1,4 +1,5 @@
 export * from './booking.interface';
+export * from './booking-detail.interface';
 export * from './account-booking.interface';
 export * from './client.interface';
 export * from './court.interface';
@@ -18,3 +19,4 @@ export * from './price-calculation.interface';
 export * from './dashboard.interface';
 export * from './user.interface';
 export * from './recurrence.interface';
+export * from './pagination.interface';
