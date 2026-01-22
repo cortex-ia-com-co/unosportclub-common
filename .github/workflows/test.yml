@@ -29,59 +29,35 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - name: Checkout common repository
+      - name: Checkout code
         uses: actions/checkout@v5
-        with:
-          path: common-repo
-          submodules: false
-
-      - name: Checkout main monorepo
-        uses: actions/checkout@v5
-        with:
-          repository: cortex-ia-com-co/unosportclub
-          path: main-repo
-          ref: develop
-          token: ${{ secrets.PAT_MONOREPO_ACCESS }}
 
       - name: Use Node.js 24.x
         uses: actions/setup-node@v6
         with:
           node-version: '24.x'
-          cache: 'npm'
-          cache-dependency-path: 'main-repo/package-lock.json'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@cortex-ia-com-co'
 
-      - name: Install dependencies from main monorepo
-        run: |
-          cd main-repo
-          npm ci
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Install peer dependencies for testing
+        run: npm install --no-save @angular/fire@21.0.0-rc.0 socket.io-client@^4.8.0
 
       - name: Install Angular CLI
-        run: |
-          cd main-repo
-          npm install -g @angular/cli
+        run: npm install -g @angular/cli
 
-      - name: Copy common project to main repo
-        run: |
-          rm -rf main-repo/projects/common
-          cp -r common-repo main-repo/projects/common
-          rm -rf main-repo/projects/common/.git main-repo/projects/common/.github
-
-      - name: Build common library
-        run: |
-          cd main-repo
-          ng build common
+      - name: Build library
+        run: ng build common --configuration development
 
       - name: Run Angular tests
-        run: |
-          cd main-repo
-          ng test common --watch=false --browsers ChromeHeadless || true
+        run: ng test --watch=false --browsers ChromeHeadless
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: common-test-results
-          path: main-repo/coverage
+          path: coverage
           if-no-files-found: ignore
