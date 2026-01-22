@@ -52,21 +52,50 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@cortex-ia-com-co'
 
-      - name: Install dependencies from main monorepo
-        run: |
-          cd main-repo
-          npm ci
-
-      - name: Install Angular CLI
-        run: |
-          cd main-repo
-          npm install -g @angular/cli
-
       - name: Copy common project to main repo
         run: |
           rm -rf main-repo/projects/common
           cp -r common-repo main-repo/projects/common
           rm -rf main-repo/projects/common/.git main-repo/projects/common/.github
+
+      - name: Use local common package in main repo
+        run: |
+          cd main-repo
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const pkgPath = path.join(process.cwd(), 'package.json');
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+          const name = '@cortex-ia-com-co/common';
+          let updated = false;
+          const fields = [
+            'dependencies',
+            'devDependencies',
+            'peerDependencies',
+            'optionalDependencies',
+          ];
+          for (const field of fields) {
+            if (pkg[field] && pkg[field][name]) {
+              pkg[field][name] = 'file:projects/common';
+              updated = true;
+            }
+          }
+          if (!updated) {
+            pkg.dependencies = pkg.dependencies || {};
+            pkg.dependencies[name] = 'file:projects/common';
+          }
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+
+      - name: Install dependencies from main monorepo
+        run: |
+          cd main-repo
+          npm install
+
+      - name: Install Angular CLI
+        run: |
+          cd main-repo
+          npm install -g @angular/cli
 
       - name: Build common library
         run: |
