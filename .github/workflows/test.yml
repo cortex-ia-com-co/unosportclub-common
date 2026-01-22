@@ -31,80 +31,30 @@ jobs:
     steps:
       - name: Checkout common repository
         uses: actions/checkout@v5
-        with:
-          path: common-repo
-          submodules: false
-
-      - name: Checkout main monorepo
-        uses: actions/checkout@v5
-        with:
-          repository: cortex-ia-com-co/unosportclub
-          path: main-repo
-          ref: develop
-          token: ${{ secrets.PAT_MONOREPO_ACCESS }}
 
       - name: Use Node.js 24.x
         uses: actions/setup-node@v6
         with:
           node-version: '24.x'
           cache: 'npm'
-          cache-dependency-path: 'main-repo/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@cortex-ia-com-co'
 
-      - name: Copy common project to main repo
+      - name: Install dependencies
         run: |
-          rm -rf main-repo/projects/common
-          cp -r common-repo main-repo/projects/common
-          rm -rf main-repo/projects/common/.git main-repo/projects/common/.github
-
-      - name: Use local common package in main repo
-        run: |
-          cd main-repo
-          node - <<'NODE'
-          const fs = require('fs');
-          const path = require('path');
-          const pkgPath = path.join(process.cwd(), 'package.json');
-          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-          const name = '@cortex-ia-com-co/common';
-          let updated = false;
-          const fields = [
-            'dependencies',
-            'devDependencies',
-            'peerDependencies',
-            'optionalDependencies',
-          ];
-          for (const field of fields) {
-            if (pkg[field] && pkg[field][name]) {
-              pkg[field][name] = 'file:projects/common';
-              updated = true;
-            }
-          }
-          if (!updated) {
-            pkg.dependencies = pkg.dependencies || {};
-            pkg.dependencies[name] = 'file:projects/common';
-          }
-          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-          NODE
-
-      - name: Install dependencies from main monorepo
-        run: |
-          cd main-repo
-          npm install
+          npm ci
 
       - name: Install Angular CLI
         run: |
-          cd main-repo
           npm install -g @angular/cli
 
       - name: Build common library
         run: |
-          cd main-repo
           ng build common
 
       - name: Run Angular tests
         run: |
-          cd main-repo
           ng test common --watch=false --browsers ChromeHeadless || true
 
       - name: Upload test results
@@ -112,5 +62,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: common-test-results
-          path: main-repo/coverage
+          path: coverage
           if-no-files-found: ignore
