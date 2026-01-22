@@ -8,5 +8,7 @@ export interface PaymentInterface {
   gateway_response?: string | null;
   status: boolean;
   date: string;
+  date_date?: string | null;
+  date_time?: string | null;
   description?: string | null;
 }

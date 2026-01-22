@@ -9,9 +9,17 @@ export interface BookingInterface {
   reservation_status_id?: number | null;
   checking: string | null;
   checkout: string | null;
+  checking_date?: string | null;
+  checking_time?: string | null;
+  checkout_date?: string | null;
+  checkout_time?: string | null;
   notes?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  created_date?: string | null;
+  created_time?: string | null;
+  updated_date?: string | null;
+  updated_time?: string | null;
   client_name?: string | null;
   client_first_name?: string | null;
   client_last_name?: string | null;
