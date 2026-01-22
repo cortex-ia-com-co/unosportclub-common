@@ -37,13 +37,17 @@ jobs:
         with:
           node-version: '24.x'
           cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
+          cache-dependency-path: 'package.json'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@cortex-ia-com-co'
 
       - name: Install dependencies
         run: |
-          npm ci
+          npm install --legacy-peer-deps
+
+      - name: Install peer dependencies for build
+        run: |
+          npm install --no-save @angular/fire@21.0.0-rc.0 socket.io-client@^4.8.0
 
       - name: Install Angular CLI
         run: |
