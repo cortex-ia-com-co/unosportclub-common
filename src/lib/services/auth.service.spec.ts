@@ -4,12 +4,13 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { Auth, User } from '@angular/fire/auth';
 import { firstValueFrom } from 'rxjs';
+import { vi } from 'vitest';
 import { AuthService, AuthClientInterface, Permissions } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
-  let mockAuth: jasmine.SpyObj<Auth>;
+  let mockAuth: Partial<Auth>;
   let mockUser: User;
 
   function createMockUser(claims: Record<string, boolean> = {}): User {
@@ -17,37 +18,33 @@ describe('AuthService', () => {
       uid: 'user123',
       email: 'test@example.com',
       displayName: 'Test User',
-      getIdToken: jasmine.createSpy('getIdToken').and.returnValue(Promise.resolve('token123')),
-      getIdTokenResult: jasmine.createSpy('getIdTokenResult').and.returnValue(
-        Promise.resolve({
-          claims,
-          token: 'token123',
-          expirationTime: '1234567890',
-          issuedAtTime: '1234567890',
-          signInProvider: 'password',
-          signInSecondFactor: null,
-        }),
-      ),
+      getIdToken: vi.fn().mockResolvedValue('token123'),
+      getIdTokenResult: vi.fn().mockResolvedValue({
+        claims,
+        token: 'token123',
+        expirationTime: '1234567890',
+        issuedAtTime: '1234567890',
+        signInProvider: 'password',
+        signInSecondFactor: null,
+      }),
     } as unknown as User;
   }
 
-  function createAuthMock(currentUser: User | null): jasmine.SpyObj<Auth> {
+  function createAuthMock(currentUser: User | null): Partial<Auth> {
     const mockApp = {
       name: 'test-app',
       options: {},
       automaticDataCollectionEnabled: false,
     };
     
-    const auth = jasmine.createSpyObj('Auth', [], {
+    return {
       currentUser,
-      app: mockApp,
-      onAuthStateChanged: jasmine.createSpy('onAuthStateChanged').and.callFake((callback: (user: User | null) => void) => {
+      app: mockApp as any,
+      onAuthStateChanged: vi.fn((callback: (user: User | null) => void) => {
         callback(currentUser);
         return () => {};
       }),
-    });
-    
-    return auth;
+    };
   }
 
   beforeEach(() => {
@@ -108,29 +105,25 @@ describe('AuthService', () => {
       });
     });
 
-    it('should detect operator role', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions.isOperator).toBe(true);
-        expect(permissions.hasPanelAccess).toBe(true);
-        expect(permissions.hasAnyRole).toBe(true);
-        done();
-      }, 200);
+    it('should detect operator role', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions.isOperator).toBe(true);
+      expect(permissions.hasPanelAccess).toBe(true);
+      expect(permissions.hasAnyRole).toBe(true);
     });
 
-    it('should return correct permissions for operator', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions).toEqual({
-          isOperator: true,
-          isAdmin: false,
-          isSudo: false,
-          isTrainer: false,
-          hasAnyRole: true,
-          hasPanelAccess: true,
-        });
-        done();
-      }, 200);
+    it('should return correct permissions for operator', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions).toEqual({
+        isOperator: true,
+        isAdmin: false,
+        isSudo: false,
+        isTrainer: false,
+        hasAnyRole: true,
+        hasPanelAccess: true,
+      });
     });
   });
 
@@ -156,38 +149,31 @@ describe('AuthService', () => {
       });
     });
 
-    it('should detect admin role', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions.isAdmin).toBe(true);
-        expect(permissions.hasPanelAccess).toBe(true);
-        expect(permissions.hasAnyRole).toBe(true);
-        done();
-      }, 200);
+    it('should detect admin role', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions.isAdmin).toBe(true);
+      expect(permissions.hasPanelAccess).toBe(true);
+      expect(permissions.hasAnyRole).toBe(true);
     });
 
-    it('should return correct permissions for admin', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions).toEqual({
-          isOperator: false,
-          isAdmin: true,
-          isSudo: false,
-          isTrainer: false,
-          hasAnyRole: true,
-          hasPanelAccess: true,
-        });
-        done();
-      }, 200);
+    it('should return correct permissions for admin', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions).toEqual({
+        isOperator: false,
+        isAdmin: true,
+        isSudo: false,
+        isTrainer: false,
+        hasAnyRole: true,
+        hasPanelAccess: true,
+      });
     });
 
-    it('should return true for isAdmin observable', (done) => {
-      setTimeout(() => {
-        firstValueFrom(service.isAdmin()).then((isAdmin) => {
-          expect(isAdmin).toBe(true);
-          done();
-        });
-      }, 200);
+    it('should return true for isAdmin observable', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const isAdmin = await firstValueFrom(service.isAdmin());
+      expect(isAdmin).toBe(true);
     });
   });
 
@@ -213,29 +199,25 @@ describe('AuthService', () => {
       });
     });
 
-    it('should detect sudo role', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions.isSudo).toBe(true);
-        expect(permissions.hasPanelAccess).toBe(true);
-        expect(permissions.hasAnyRole).toBe(true);
-        done();
-      }, 200);
+    it('should detect sudo role', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions.isSudo).toBe(true);
+      expect(permissions.hasPanelAccess).toBe(true);
+      expect(permissions.hasAnyRole).toBe(true);
     });
 
-    it('should return correct permissions for sudo', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions).toEqual({
-          isOperator: false,
-          isAdmin: false,
-          isSudo: true,
-          isTrainer: false,
-          hasAnyRole: true,
-          hasPanelAccess: true,
-        });
-        done();
-      }, 200);
+    it('should return correct permissions for sudo', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions).toEqual({
+        isOperator: false,
+        isAdmin: false,
+        isSudo: true,
+        isTrainer: false,
+        hasAnyRole: true,
+        hasPanelAccess: true,
+      });
     });
   });
 
@@ -261,38 +243,31 @@ describe('AuthService', () => {
       });
     });
 
-    it('should detect trainer role', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions.isTrainer).toBe(true);
-        expect(permissions.hasAnyRole).toBe(true);
-        expect(permissions.hasPanelAccess).toBe(false);
-        done();
-      }, 200);
+    it('should detect trainer role', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions.isTrainer).toBe(true);
+      expect(permissions.hasAnyRole).toBe(true);
+      expect(permissions.hasPanelAccess).toBe(false);
     });
 
-    it('should return correct permissions for trainer', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions).toEqual({
-          isOperator: false,
-          isAdmin: false,
-          isSudo: false,
-          isTrainer: true,
-          hasAnyRole: true,
-          hasPanelAccess: false,
-        });
-        done();
-      }, 200);
+    it('should return correct permissions for trainer', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions).toEqual({
+        isOperator: false,
+        isAdmin: false,
+        isSudo: false,
+        isTrainer: true,
+        hasAnyRole: true,
+        hasPanelAccess: false,
+      });
     });
 
-    it('should return true for isTrainer observable', (done) => {
-      setTimeout(() => {
-        firstValueFrom(service.isTrainer()).then((isTrainer) => {
-          expect(isTrainer).toBe(true);
-          done();
-        });
-      }, 200);
+    it('should return true for isTrainer observable', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const isTrainer = await firstValueFrom(service.isTrainer());
+      expect(isTrainer).toBe(true);
     });
   });
 
@@ -318,15 +293,13 @@ describe('AuthService', () => {
       });
     });
 
-    it('should detect multiple roles', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions.isOperator).toBe(true);
-        expect(permissions.isAdmin).toBe(true);
-        expect(permissions.hasAnyRole).toBe(true);
-        expect(permissions.hasPanelAccess).toBe(true);
-        done();
-      }, 200);
+    it('should detect multiple roles', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions.isOperator).toBe(true);
+      expect(permissions.isAdmin).toBe(true);
+      expect(permissions.hasAnyRole).toBe(true);
+      expect(permissions.hasPanelAccess).toBe(true);
     });
   });
 
@@ -352,19 +325,17 @@ describe('AuthService', () => {
       });
     });
 
-    it('should return default permissions when no role', (done) => {
-      setTimeout(() => {
-        const permissions = service.checkPermissions();
-        expect(permissions).toEqual({
-          isOperator: false,
-          isAdmin: false,
-          isSudo: false,
-          isTrainer: false,
-          hasAnyRole: false,
-          hasPanelAccess: false,
-        });
-        done();
-      }, 200);
+    it('should return default permissions when no role', async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const permissions = service.checkPermissions();
+      expect(permissions).toEqual({
+        isOperator: false,
+        isAdmin: false,
+        isSudo: false,
+        isTrainer: false,
+        hasAnyRole: false,
+        hasPanelAccess: false,
+      });
     });
   });
 
@@ -403,7 +374,7 @@ describe('AuthService', () => {
   });
 
   describe('hasPanelAccess', () => {
-    it('should return true for operator', (done) => {
+    it('should return true for operator', async () => {
       mockUser = createMockUser({ operator: true });
       const authMock = createAuthMock(mockUser);
       TestBed.resetTestingModule();
@@ -422,15 +393,12 @@ describe('AuthService', () => {
         apiUrl: '/api',
         enablePermissions: true,
       });
-      setTimeout(() => {
-        firstValueFrom(service.hasPanelAccess()).then((hasAccess) => {
-          expect(hasAccess).toBe(true);
-          done();
-        });
-      }, 200);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const hasAccess = await firstValueFrom(service.hasPanelAccess());
+      expect(hasAccess).toBe(true);
     });
 
-    it('should return true for admin', (done) => {
+    it('should return true for admin', async () => {
       mockUser = createMockUser({ admin: true });
       const authMock = createAuthMock(mockUser);
       TestBed.resetTestingModule();
@@ -449,15 +417,12 @@ describe('AuthService', () => {
         apiUrl: '/api',
         enablePermissions: true,
       });
-      setTimeout(() => {
-        firstValueFrom(service.hasPanelAccess()).then((hasAccess) => {
-          expect(hasAccess).toBe(true);
-          done();
-        });
-      }, 200);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const hasAccess = await firstValueFrom(service.hasPanelAccess());
+      expect(hasAccess).toBe(true);
     });
 
-    it('should return true for sudo', (done) => {
+    it('should return true for sudo', async () => {
       mockUser = createMockUser({ sudo: true });
       const authMock = createAuthMock(mockUser);
       TestBed.resetTestingModule();
@@ -476,15 +441,12 @@ describe('AuthService', () => {
         apiUrl: '/api',
         enablePermissions: true,
       });
-      setTimeout(() => {
-        firstValueFrom(service.hasPanelAccess()).then((hasAccess) => {
-          expect(hasAccess).toBe(true);
-          done();
-        });
-      }, 200);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const hasAccess = await firstValueFrom(service.hasPanelAccess());
+      expect(hasAccess).toBe(true);
     });
 
-    it('should return false for trainer', (done) => {
+    it('should return false for trainer', async () => {
       mockUser = createMockUser({ trainer: true });
       const authMock = createAuthMock(mockUser);
       TestBed.resetTestingModule();
@@ -503,12 +465,9 @@ describe('AuthService', () => {
         apiUrl: '/api',
         enablePermissions: true,
       });
-      setTimeout(() => {
-        firstValueFrom(service.hasPanelAccess()).then((hasAccess) => {
-          expect(hasAccess).toBe(false);
-          done();
-        });
-      }, 200);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const hasAccess = await firstValueFrom(service.hasPanelAccess());
+      expect(hasAccess).toBe(false);
     });
   });
 

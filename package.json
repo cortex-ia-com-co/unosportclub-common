@@ -24,7 +24,9 @@
     "@angular/compiler": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",
     "ng-packagr": "^21.0.0",
-    "typescript": ">=5.9.0 <6.0.0"
+    "typescript": ">=5.9.0 <6.0.0",
+    "vitest": "^4.0.8",
+    "jsdom": "^27.1.0"
   },
   "sideEffects": false
 }
