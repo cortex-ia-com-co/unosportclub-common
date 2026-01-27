@@ -20,6 +20,7 @@ export interface TrainingClassInterface {
   reservation_checking?: string | null;
   reservation_checkout?: string | null;
   reservation_type_name?: string | null;
+  court_name?: string | null;
   max_capacity?: number | null;
   tariff_single_price?: number | null;
   tariff_total_price?: number | null;
