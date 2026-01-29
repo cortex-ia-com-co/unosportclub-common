@@ -1,6 +1,7 @@
 export * from './account-booking.interface';
 export * from './account-payment.interface';
 export * from './booking-detail.interface';
+export * from './booking-full.interface';
 export * from './booking.interface';
 export * from './client.interface';
 export * from './court-type-availability.interface';
@@ -11,6 +12,7 @@ export * from './dashboard.interface';
 export * from './document-type.interface';
 export * from './enrollment.interface';
 export * from './pagination.interface';
+export * from './paginated-response.interface';
 export * from './payment-type.interface';
 export * from './payment.interface';
 export * from './price-calculation.interface';
