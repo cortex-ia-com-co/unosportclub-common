@@ -29,7 +29,7 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Install peer dependencies for build
-        run: npm install --no-save @angular/fire@21.0.0-rc.0 socket.io-client@^4.8.0
+        run: npm install --no-save --legacy-peer-deps @angular/fire@21.0.0-rc.0 socket.io-client@^4.8.0
 
       - name: Extract version from tag
         id: version
