@@ -43,8 +43,13 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Install peer dependencies for testing
-        run: npm install --no-save --legacy-peer-deps @angular/fire@21.0.0-rc.0 socket.io-client@^4.8.0
+      - name: Install peer dependencies for build and testing
+        run: |
+          npm install --no-save --legacy-peer-deps \
+            @angular/common@^21.0.0 \
+            @angular/core@^21.0.0 \
+            @angular/fire@21.0.0-rc.0 \
+            socket.io-client@^4.8.0
 
       - name: Install Angular CLI
         run: npm install -g @angular/cli
