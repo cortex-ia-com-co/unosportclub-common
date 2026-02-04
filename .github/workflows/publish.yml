@@ -59,7 +59,7 @@ jobs:
         run: npm install -g @angular/cli
 
       - name: Build library
-        run: ng build common --configuration production
+        run: ng build --configuration production
 
       - name: Prepare package for publishing
         run: |

@@ -50,7 +50,7 @@ jobs:
         run: npm install -g @angular/cli
 
       - name: Build library
-        run: ng build common --configuration development
+        run: ng build --configuration development
 
       - name: Run Angular tests
         run: ng test --watch=false
