@@ -7,6 +7,8 @@ export interface PaymentInterface {
   transaction_id: string | null;
   gateway_response?: string | null;
   status: boolean;
-  date: string;
+  date: string | null;
+  date_date?: string | null;
+  date_time?: string | null;
   description?: string | null;
 }

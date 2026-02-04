@@ -4,6 +4,7 @@ export * from './booking-detail.interface';
 export * from './booking-full.interface';
 export * from './booking.interface';
 export * from './client.interface';
+export * from './configuration.interface';
 export * from './court-type-availability.interface';
 export * from './court-type-reservation.interface';
 export * from './court-type.interface';
