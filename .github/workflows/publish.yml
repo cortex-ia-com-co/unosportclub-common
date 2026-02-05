@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: read
+  contents: write
   packages: write
   id-token: write
 jobs:
@@ -94,3 +94,26 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           echo "🔍 Verifying package $PACKAGE_NAME@$VERSION is published..."
           npm view "$PACKAGE_NAME@$VERSION" version || echo "⚠️ Package may take a few moments to appear in registry"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          body: |
+            ## Changes in ${{ steps.version.outputs.tag }}
+
+            ### Removed
+            - Removed `RelayService` and `RelayServiceConfig` interface
+            - Removed `socket.io-client` from peerDependencies and devDependencies
+
+            ### Updated
+            - Updated workflows to remove socket.io-client installation
+
+            ### Notes
+            RelayService was causing issues with incorrect relayUrl configuration
+            and should be implemented in the consuming projects instead.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
