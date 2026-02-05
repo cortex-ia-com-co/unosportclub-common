@@ -58,13 +58,17 @@ jobs:
         run: npm install -g @angular/cli
 
       - name: Build library
-        run: ng build --configuration production
+        run: ng build common --configuration production
 
       - name: Prepare package for publishing
         run: |
           cd dist
           if [ -f ../README.md ]; then
             cp ../README.md .
+          fi
+          # Fix .npmignore to not exclude root package.json
+          if [ -f .npmignore ]; then
+            sed -i 's|^\*\*/package\.json$|**/node_modules/**/package.json|' .npmignore || true
           fi
           if [ -f package.json ]; then
             node -e "
@@ -81,6 +85,10 @@ jobs:
             "
           fi
           echo "✅ Package prepared in dist/"
+          echo "📦 Contents of dist/:"
+          ls -la
+          echo "📄 package.json:"
+          cat package.json | head -20
 
       - name: Publish to GitHub Packages
         run: npm publish
