@@ -1,5 +1,5 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, inject } from '@angular/core';
 import { ToastService, ToastType } from '../../services/toast.service';
 
 @Component({
@@ -22,7 +22,15 @@ import { ToastService, ToastType } from '../../services/toast.service';
 })
 export class ToastContainerComponent {
   private toastService = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
   toasts = this.toastService.getToasts();
+
+  constructor() {
+    effect(() => {
+      this.toasts();
+      this.cdr.markForCheck();
+    });
+  }
 
   dismiss(id: string): void {
     this.toastService.dismiss(id);
