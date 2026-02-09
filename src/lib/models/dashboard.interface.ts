@@ -3,6 +3,7 @@ export interface DashboardStatsInterface {
     total: number;
     verified: number;
     unverified: number;
+    active_this_month?: number;
   };
   courts: {
     total: number;
