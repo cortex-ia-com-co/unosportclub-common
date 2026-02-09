@@ -54,3 +54,34 @@ export interface PaymentStatsInterface {
   completed_amount: number;
   orphan_payments: number;
 }
+
+export interface DashboardChartsInterface {
+  usageDistribution: {
+    futbol: number;
+    padel: number;
+  };
+  incomeAndPayments: {
+    total: number;
+    data: Array<{
+      date: string;
+      income: number;
+      payments: number;
+    }>;
+  };
+  reservationStatus: {
+    data: Array<{
+      day: string;
+      active: number;
+      pending: number;
+      cancelled: number;
+    }>;
+  };
+  heatmap: {
+    data: Array<{
+      day: string;
+      hour: number;
+      level: 'BAJA' | 'MEDIA' | 'ALTA' | 'SATURADO';
+      count: number;
+    }>;
+  };
+}
