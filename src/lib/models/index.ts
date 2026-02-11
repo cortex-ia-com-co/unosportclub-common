@@ -14,6 +14,8 @@ export * from './document-type.interface';
 export * from './enrollment.interface';
 export * from './paginated-response.interface';
 export * from './pagination.interface';
+export * from './report.interface';
+export * from './reports.interface';
 export * from './payment-type.interface';
 export * from './payment.interface';
 export * from './price-calculation.interface';
