@@ -81,6 +81,22 @@ export class AuthService {
     }
   }
 
+  private static roleFromClaims(claims: Record<string, unknown>, role: 'operator' | 'admin' | 'sudo' | 'trainer'): boolean {
+    if (Boolean(claims[role])) {
+      return true;
+    }
+    const raw = claims['customAttributes'];
+    if (raw == null) {
+      return false;
+    }
+    try {
+      const attrs = typeof raw === 'string' ? (JSON.parse(raw) as Record<string, unknown>) : raw as Record<string, unknown>;
+      return Boolean(attrs[role]);
+    } catch {
+      return false;
+    }
+  }
+
   private updatePermissions(user: User | null): void {
     if (!user) {
       this.permissionsSubject.next({
@@ -97,16 +113,18 @@ export class AuthService {
     user
       .getIdTokenResult(true)
       .then((tokenResult) => {
-        const claims = tokenResult.claims;
+        const claims = tokenResult.claims as Record<string, unknown>;
+        const isOperator = AuthService.roleFromClaims(claims, 'operator');
+        const isAdmin = AuthService.roleFromClaims(claims, 'admin');
+        const isSudo = AuthService.roleFromClaims(claims, 'sudo');
+        const isTrainer = AuthService.roleFromClaims(claims, 'trainer');
         const permissions: Permissions = {
-          isOperator: Boolean(claims['operator']),
-          isAdmin: Boolean(claims['admin']),
-          isSudo: Boolean(claims['sudo']),
-          isTrainer: Boolean(claims['trainer']),
-          hasAnyRole: Boolean(
-            claims['operator'] || claims['admin'] || claims['sudo'] || claims['trainer'],
-          ),
-          hasPanelAccess: Boolean(claims['operator'] || claims['admin'] || claims['sudo']),
+          isOperator,
+          isAdmin,
+          isSudo,
+          isTrainer,
+          hasAnyRole: isOperator || isAdmin || isSudo || isTrainer,
+          hasPanelAccess: isOperator || isAdmin || isSudo,
         };
         this.permissionsSubject.next(permissions);
       })
@@ -256,7 +274,28 @@ export class AuthService {
     if (!user) {
       return from(Promise.reject(new Error('No hay usuario autenticado')));
     }
-    return from(user.getIdToken(true));
+    const promise = user.getIdToken(true).then((token) => {
+      if (!this.config?.enablePermissions) {
+        return token;
+      }
+      return user.getIdTokenResult(true).then((tokenResult) => {
+        const claims = tokenResult.claims as Record<string, unknown>;
+        const isOperator = AuthService.roleFromClaims(claims, 'operator');
+        const isAdmin = AuthService.roleFromClaims(claims, 'admin');
+        const isSudo = AuthService.roleFromClaims(claims, 'sudo');
+        const isTrainer = AuthService.roleFromClaims(claims, 'trainer');
+        this.permissionsSubject.next({
+          isOperator,
+          isAdmin,
+          isSudo,
+          isTrainer,
+          hasAnyRole: isOperator || isAdmin || isSudo || isTrainer,
+          hasPanelAccess: isOperator || isAdmin || isSudo,
+        });
+        return token;
+      });
+    });
+    return from(promise);
   }
 
   get currentUser(): User | null {

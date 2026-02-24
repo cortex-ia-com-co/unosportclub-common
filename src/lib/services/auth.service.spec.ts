@@ -13,7 +13,7 @@ describe('AuthService', () => {
   let mockAuth: Partial<Auth>;
   let mockUser: User;
 
-  function createMockUser(claims: Record<string, boolean> = {}): User {
+  function createMockUser(claims: Record<string, unknown> = {}): User {
     return {
       uid: 'user123',
       email: 'test@example.com',
@@ -28,6 +28,28 @@ describe('AuthService', () => {
         signInSecondFactor: null,
       }),
     } as unknown as User;
+  }
+
+  function setupServiceWithClaims(claims: Record<string, unknown>): void {
+    mockUser = createMockUser(claims);
+    const authMock = createAuthMock(mockUser);
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideZonelessChangeDetection(),
+        AuthService,
+        { provide: Auth, useValue: authMock },
+      ],
+    });
+    service = TestBed.inject(AuthService);
+    httpMock = TestBed.inject(HttpTestingController);
+    service.initialize({ apiUrl: '/api', enablePermissions: true });
+  }
+
+  async function waitForPermissions(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   function createAuthMock(currentUser: User | null): Partial<Auth> {
@@ -268,6 +290,145 @@ describe('AuthService', () => {
       await new Promise(resolve => setTimeout(resolve, 200));
       const isTrainer = await firstValueFrom(service.isTrainer());
       expect(isTrainer).toBe(true);
+    });
+  });
+
+  describe('roleFromClaims via customAttributes - Operator', () => {
+    beforeEach(() => {
+      setupServiceWithClaims({ customAttributes: '{"operator":true,"admin":false,"sudo":false,"trainer":false}' });
+    });
+
+    it('should set isOperator from customAttributes JSON string', async () => {
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isOperator).toBe(true);
+      expect(p.isAdmin).toBe(false);
+      expect(p.isSudo).toBe(false);
+      expect(p.isTrainer).toBe(false);
+      expect(p.hasPanelAccess).toBe(true);
+      expect(p.hasAnyRole).toBe(true);
+    });
+  });
+
+  describe('roleFromClaims via customAttributes - Admin', () => {
+    beforeEach(() => {
+      setupServiceWithClaims({ customAttributes: '{"operator":false,"admin":true,"sudo":false,"trainer":false}' });
+    });
+
+    it('should set isAdmin from customAttributes JSON string', async () => {
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isOperator).toBe(false);
+      expect(p.isAdmin).toBe(true);
+      expect(p.isSudo).toBe(false);
+      expect(p.isTrainer).toBe(false);
+      expect(p.hasPanelAccess).toBe(true);
+      expect(p.hasAnyRole).toBe(true);
+    });
+
+    it('should return true for isAdmin() when only customAttributes has admin', async () => {
+      await waitForPermissions();
+      const isAdmin = await firstValueFrom(service.isAdmin());
+      expect(isAdmin).toBe(true);
+    });
+  });
+
+  describe('roleFromClaims via customAttributes - Sudo', () => {
+    beforeEach(() => {
+      setupServiceWithClaims({ customAttributes: '{"operator":false,"admin":false,"sudo":true,"trainer":false}' });
+    });
+
+    it('should set isSudo from customAttributes JSON string', async () => {
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isOperator).toBe(false);
+      expect(p.isAdmin).toBe(false);
+      expect(p.isSudo).toBe(true);
+      expect(p.isTrainer).toBe(false);
+      expect(p.hasPanelAccess).toBe(true);
+      expect(p.hasAnyRole).toBe(true);
+    });
+  });
+
+  describe('roleFromClaims via customAttributes - Trainer', () => {
+    beforeEach(() => {
+      setupServiceWithClaims({ customAttributes: '{"trainer":true,"operator":false,"admin":false,"sudo":false}' });
+    });
+
+    it('should set isTrainer from customAttributes JSON string', async () => {
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isOperator).toBe(false);
+      expect(p.isAdmin).toBe(false);
+      expect(p.isSudo).toBe(false);
+      expect(p.isTrainer).toBe(true);
+      expect(p.hasPanelAccess).toBe(false);
+      expect(p.hasAnyRole).toBe(true);
+    });
+
+    it('should return true for isTrainer() when only customAttributes has trainer', async () => {
+      await waitForPermissions();
+      const isTrainer = await firstValueFrom(service.isTrainer());
+      expect(isTrainer).toBe(true);
+    });
+  });
+
+  describe('roleFromClaims edge cases', () => {
+    it('should read roles from customAttributes when it is an object (not string)', async () => {
+      setupServiceWithClaims({
+        customAttributes: { trainer: true, operator: false, admin: false, sudo: false },
+      });
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isTrainer).toBe(true);
+      expect(p.isOperator).toBe(false);
+      expect(p.hasAnyRole).toBe(true);
+    });
+
+    it('should treat all roles false when customAttributes is invalid JSON', async () => {
+      setupServiceWithClaims({ customAttributes: 'not valid json {' });
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isOperator).toBe(false);
+      expect(p.isAdmin).toBe(false);
+      expect(p.isSudo).toBe(false);
+      expect(p.isTrainer).toBe(false);
+      expect(p.hasAnyRole).toBe(false);
+      expect(p.hasPanelAccess).toBe(false);
+    });
+
+    it('should prefer direct claim over customAttributes when both present', async () => {
+      setupServiceWithClaims({
+        trainer: true,
+        customAttributes: '{"trainer":false,"operator":false,"admin":false,"sudo":false}',
+      });
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isTrainer).toBe(true);
+    });
+
+    it('should resolve multiple roles from customAttributes', async () => {
+      setupServiceWithClaims({
+        customAttributes: '{"operator":true,"admin":true,"sudo":false,"trainer":true}',
+      });
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isOperator).toBe(true);
+      expect(p.isAdmin).toBe(true);
+      expect(p.isTrainer).toBe(true);
+      expect(p.isSudo).toBe(false);
+      expect(p.hasPanelAccess).toBe(true);
+      expect(p.hasAnyRole).toBe(true);
+    });
+
+    it('should treat missing customAttributes as no role', async () => {
+      setupServiceWithClaims({});
+      await waitForPermissions();
+      const p = service.checkPermissions();
+      expect(p.isOperator).toBe(false);
+      expect(p.isAdmin).toBe(false);
+      expect(p.isSudo).toBe(false);
+      expect(p.isTrainer).toBe(false);
     });
   });
 
