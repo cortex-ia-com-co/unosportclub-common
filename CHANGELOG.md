@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.37] - 2025-02-24
+
+### Changed
+
+- **CI/CD**: Single workflow `ci.yml` (test on push/PR, publish to GitHub Packages on tag push). Tag and release are not created by the workflow; tag is pushed manually.
+
 ## [0.0.36] - 2025-02-24
 
 ### Fixed
