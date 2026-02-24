@@ -15,7 +15,7 @@ export interface ClientCreateDataInterface {
   email?: string;
   display_name?: string;
   email_verified?: boolean;
-  phone_number?: string;
+  phone?: string;
   document_type_name?: string;
 }
 

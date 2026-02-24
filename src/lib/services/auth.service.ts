@@ -24,7 +24,7 @@ export interface AuthClientInterface {
   document_type_id: number;
   display_name?: string;
   email: string;
-  phone_number?: string;
+  phone?: string;
   [key: string]: unknown;
 }
 
@@ -182,7 +182,7 @@ export class AuthService {
                   document: clientData.document,
                   document_type_id: clientData.document_type_id,
                   email: (user.email || email || '') as string,
-                  phone_number: clientData.phone_number,
+                  phone: clientData.phone,
                 };
                 return this.registerClient(token, user, clientDataForRegistration);
               }),
@@ -202,7 +202,7 @@ export class AuthService {
     const data = {
       email: user.email ?? '',
       display_name: user.displayName ?? '',
-      phone_number: client.phone_number,
+      phone: client.phone,
       first_name: client.first_name ?? '',
       last_name: client.last_name ?? '',
       document: client.document ?? '',

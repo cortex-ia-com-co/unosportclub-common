@@ -4,7 +4,7 @@ export interface UserInterface {
   email?: string | null;
   email_verified: boolean;
   display_name?: string | null;
-  phone_number?: string | null;
+  phone?: string | null;
   disabled: boolean;
   creation_time?: string | null;
   last_sign_in_time?: string | null;
