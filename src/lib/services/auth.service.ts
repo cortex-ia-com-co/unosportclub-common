@@ -1,21 +1,10 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
-import {
-  Auth,
-  EmailAuthProvider,
-  User,
-  authState,
-  confirmPasswordReset,
-  createUserWithEmailAndPassword,
-  reauthenticateWithCredential,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signOut,
-  updatePassword,
-  updateProfile,
-} from '@angular/fire/auth';
+import { Injectable, inject, signal, InjectionToken, Optional, Inject } from '@angular/core';
 import { BehaviorSubject, Observable, from, switchMap } from 'rxjs';
 import { map } from 'rxjs/operators';
+import type { AuthProvider, AuthUser } from './auth-provider.interface';
+
+export const AUTH_PROVIDER = new InjectionToken<AuthProvider>('AUTH_PROVIDER');
 
 export interface AuthClientInterface {
   first_name: string;
@@ -49,8 +38,8 @@ export interface Permissions {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly auth = inject(Auth);
-  private readonly http = inject(HttpClient);
+  private readonly authProvider: AuthProvider;
+  private readonly http: HttpClient;
   private config: AuthServiceConfig | null = null;
   private readonly permissionsSubject = new BehaviorSubject<Permissions>({
     isOperator: false,
@@ -61,11 +50,17 @@ export class AuthService {
     hasPanelAccess: false,
   });
 
-  readonly authState$: Observable<User | null> = authState(this.auth);
+  readonly authState$: Observable<AuthUser | null>;
   readonly permissions$ = this.permissionsSubject.asObservable();
-  readonly currentUserSignal = signal<User | null>(null);
+  readonly currentUserSignal = signal<AuthUser | null>(null);
 
-  constructor() {
+  constructor(
+    @Optional() @Inject(AUTH_PROVIDER) authProvider?: AuthProvider,
+    @Optional() http?: HttpClient,
+  ) {
+    this.authProvider = authProvider ?? inject(AUTH_PROVIDER);
+    this.http = http ?? inject(HttpClient);
+    this.authState$ = this.authProvider.authState$;
     this.authState$.subscribe((user) => {
       this.currentUserSignal.set(user);
       if (this.config?.enablePermissions) {
@@ -77,7 +72,7 @@ export class AuthService {
   initialize(config: AuthServiceConfig): void {
     this.config = config;
     if (config.enablePermissions) {
-      this.updatePermissions(this.auth.currentUser);
+      this.updatePermissions(this.authProvider.currentUser);
     }
   }
 
@@ -97,7 +92,7 @@ export class AuthService {
     }
   }
 
-  private updatePermissions(user: User | null): void {
+  private updatePermissions(user: AuthUser | null): void {
     if (!user) {
       this.permissionsSubject.next({
         isOperator: false,
@@ -144,7 +139,7 @@ export class AuthService {
     if (!this.config?.allowedDomain) {
       return true;
     }
-    const user = this.auth.currentUser;
+    const user = this.authProvider.currentUser;
     if (!user?.email) {
       return false;
     }
@@ -156,7 +151,7 @@ export class AuthService {
   }
 
   getCurrentClaims(): Record<string, unknown> | null {
-    const user = this.auth.currentUser;
+    const user = this.authProvider.currentUser;
     if (!user) {
       return null;
     }
@@ -183,7 +178,7 @@ export class AuthService {
       return from(Promise.reject(new Error('Client registration is disabled')));
     }
 
-    return from(createUserWithEmailAndPassword(this.auth, email, password)).pipe(
+    return from(this.authProvider.createUserWithEmailAndPassword(email, password)).pipe(
       switchMap((userCredential) => {
         const user = userCredential.user;
         if (!user) {
@@ -192,7 +187,7 @@ export class AuthService {
         return from(user.getIdToken()).pipe(
           switchMap((token) => {
             const displayName = `${clientData.first_name} ${clientData.last_name}`.trim();
-            return from(updateProfile(user, { displayName })).pipe(
+            return from(this.authProvider.updateProfile(user, { displayName })).pipe(
               switchMap(() => {
                 const clientDataForRegistration: AuthClientInterface = {
                   first_name: clientData.first_name,
@@ -212,7 +207,7 @@ export class AuthService {
     );
   }
 
-  registerClient(token: string, user: User, client: AuthClientInterface): Observable<unknown> {
+  registerClient(token: string, user: AuthUser, client: AuthClientInterface): Observable<unknown> {
     if (!this.config) {
       return from(Promise.reject(new Error('AuthService not initialized')));
     }
@@ -238,39 +233,31 @@ export class AuthService {
     if (this.config?.allowedDomain && !email.endsWith(this.config.allowedDomain)) {
       return from(Promise.reject(new Error(`Solo se permiten usuarios con correo ${this.config.allowedDomain}`)));
     }
-    return from(signInWithEmailAndPassword(this.auth, email, password).then(() => void 0));
+    return from(this.authProvider.signIn(email, password));
   }
 
   logout(): Observable<void> {
-    return from(signOut(this.auth));
+    return from(this.authProvider.signOut());
   }
 
   sendPasswordResetEmail(email: string): Observable<void> {
-    return from(sendPasswordResetEmail(this.auth, email));
+    return from(this.authProvider.sendPasswordResetEmail(email));
   }
 
   updatePassword(newPassword: string, currentPassword?: string): Observable<void> {
-    const user = this.auth.currentUser;
+    const user = this.authProvider.currentUser;
     if (!user || !user.email) {
       return from(Promise.reject(new Error('No hay usuario autenticado')));
     }
-
-    if (currentPassword) {
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
-      return from(reauthenticateWithCredential(user, credential)).pipe(
-        switchMap(() => from(updatePassword(user, newPassword))),
-      );
-    }
-
-    return from(updatePassword(user, newPassword));
+    return from(this.authProvider.updatePassword(user, newPassword, currentPassword));
   }
 
   confirmPasswordReset(oobCode: string, newPassword: string): Observable<void> {
-    return from(confirmPasswordReset(this.auth, oobCode, newPassword));
+    return from(this.authProvider.confirmPasswordReset(oobCode, newPassword));
   }
 
   refreshToken(): Observable<string> {
-    const user = this.auth.currentUser;
+    const user = this.authProvider.currentUser;
     if (!user) {
       return from(Promise.reject(new Error('No hay usuario autenticado')));
     }
@@ -298,7 +285,7 @@ export class AuthService {
     return from(promise);
   }
 
-  get currentUser(): User | null {
-    return this.auth.currentUser;
+  get currentUser(): AuthUser | null {
+    return this.authProvider.currentUser;
   }
 }
