@@ -51,6 +51,7 @@ export class AuthService {
   });
 
   readonly authState$: Observable<AuthUser | null>;
+  readonly isAuthenticated$: Observable<boolean>;
   readonly permissions$ = this.permissionsSubject.asObservable();
   readonly currentUserSignal = signal<AuthUser | null>(null);
 
@@ -61,6 +62,7 @@ export class AuthService {
     this.authProvider = authProvider ?? inject(AUTH_PROVIDER);
     this.http = http ?? inject(HttpClient);
     this.authState$ = this.authProvider.authState$;
+    this.isAuthenticated$ = this.authState$.pipe(map((user) => user != null));
     this.authState$.subscribe((user) => {
       this.currentUserSignal.set(user);
       if (this.config?.enablePermissions) {
@@ -105,6 +107,17 @@ export class AuthService {
       return;
     }
 
+    if (!user.getIdTokenResult) {
+      this.permissionsSubject.next({
+        isOperator: false,
+        isAdmin: false,
+        isSudo: false,
+        isTrainer: false,
+        hasAnyRole: false,
+        hasPanelAccess: false,
+      });
+      return;
+    }
     user
       .getIdTokenResult(true)
       .then((tokenResult) => {
@@ -152,7 +165,7 @@ export class AuthService {
 
   getCurrentClaims(): Record<string, unknown> | null {
     const user = this.authProvider.currentUser;
-    if (!user) {
+    if (!user || !user.getIdTokenResult) {
       return null;
     }
     return user
@@ -183,6 +196,9 @@ export class AuthService {
         const user = userCredential.user;
         if (!user) {
           return from(Promise.resolve());
+        }
+        if (!user.getIdToken) {
+          return from(Promise.reject(new Error('Token provider unavailable')));
         }
         return from(user.getIdToken()).pipe(
           switchMap((token) => {
@@ -258,11 +274,14 @@ export class AuthService {
 
   refreshToken(): Observable<string> {
     const user = this.authProvider.currentUser;
-    if (!user) {
+    if (!user || !user.getIdToken) {
       return from(Promise.reject(new Error('No hay usuario autenticado')));
     }
     const promise = user.getIdToken(true).then((token) => {
       if (!this.config?.enablePermissions) {
+        return token;
+      }
+      if (!user.getIdTokenResult) {
         return token;
       }
       return user.getIdTokenResult(true).then((tokenResult) => {
@@ -283,6 +302,10 @@ export class AuthService {
       });
     });
     return from(promise);
+  }
+
+  getAccessTokenSilently(): Observable<string> {
+    return this.refreshToken();
   }
 
   get currentUser(): AuthUser | null {

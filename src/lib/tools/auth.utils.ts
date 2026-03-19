@@ -1,0 +1,68 @@
+const ROLES_NAMESPACE = 'https://unosportclub.com.co/roles';
+const PERMISSIONS_NAMESPACE = 'https://unosportclub.com.co/permissions';
+const USER_ID_NAMESPACE = 'https://unosportclub.com.co/user_id';
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+    const payload = parts[1];
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((character) => `%${(`00${character.charCodeAt(0).toString(16)}`).slice(-2)}`)
+        .join(''),
+    );
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function getRoles(token: string): string[] {
+  const payload = decodeJwtPayload(token);
+  if (!payload) {
+    return [];
+  }
+  const roles = payload[ROLES_NAMESPACE];
+  if (!Array.isArray(roles)) {
+    return [];
+  }
+  return roles.filter((role): role is string => typeof role === 'string');
+}
+
+export function getPermissions(token: string): string[] {
+  const payload = decodeJwtPayload(token);
+  if (!payload) {
+    return [];
+  }
+  const permissions = payload[PERMISSIONS_NAMESPACE];
+  if (!Array.isArray(permissions)) {
+    return [];
+  }
+  return permissions.filter((permission): permission is string => typeof permission === 'string');
+}
+
+export function hasRole(token: string, role: string): boolean {
+  return getRoles(token).includes(role);
+}
+
+export function hasPermission(token: string, permission: string): boolean {
+  return getPermissions(token).includes(permission);
+}
+
+export function getUserId(token: string): number | undefined {
+  const payload = decodeJwtPayload(token);
+  if (!payload) {
+    return undefined;
+  }
+  const rawUserId = payload[USER_ID_NAMESPACE];
+  if (rawUserId == null) {
+    return undefined;
+  }
+  const userId = Number(rawUserId);
+  return Number.isInteger(userId) ? userId : undefined;
+}

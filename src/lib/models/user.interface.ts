@@ -29,6 +29,8 @@ export interface FirebaseUserInterface {
   };
 }
 
+export type BackendUserInterface = FirebaseUserInterface;
+
 export interface UsersListResponseInterface {
   users: FirebaseUserInterface[];
   pageToken?: string;

@@ -2,6 +2,7 @@ export interface PaymentInterface {
   id: number;
   reservation_id: number | null;
   enrollment_id?: number | null;
+  till_id?: number | null;
   payment_type_id?: number | null;
   amount: number;
   transaction_id: string | null;
