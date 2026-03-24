@@ -1,9 +1,14 @@
 import type { ReportListMeta } from './report.interface';
 
 export interface ReportClientsRow {
-  period: string;
-  periodLabel: string;
-  count: number;
+  id: number;
+  firstName: string;
+  lastName: string;
+  documentTypeName: string;
+  document: string;
+  phone: string;
+  registrationDate: string;
+  address: string;
 }
 
 export interface ReportClientsListResponse {
@@ -16,9 +21,22 @@ export interface ReportClientsSummaryResponse {
 }
 
 export interface ReportSalesRow {
+  id: number;
   date: string;
+  time: string;
   concept: string;
-  amount: number;
+  firstName: string;
+  lastName: string;
+  documentTypeName: string;
+  document: string;
+  phone: string;
+  totalAmount: number;
+  paymentTypeName: string;
+  transactionId: string;
+  discount: number;
+  observations: string;
+  operatorName: string;
+  reservationId: number;
 }
 
 export interface ReportSalesListResponse {
@@ -49,6 +67,19 @@ export interface ReportReservationsSummaryResponse {
   cancelled: number;
 }
 
+export interface ReportBookingBreakdownRow {
+  periodLabel: string;
+  reservationTypeName: string;
+  active: number;
+  pending: number;
+  cancelled: number;
+}
+
+export interface ReportBookingBreakdownResponse {
+  data: ReportBookingBreakdownRow[];
+  meta: ReportListMeta;
+}
+
 export interface ReportUtilisationRow {
   courtOrType: string;
   capacityHours: number;
@@ -70,13 +101,21 @@ export interface ReportUtilisationSummaryResponse {
 }
 
 export interface ReportPendingBalanceRow {
-  clientName: string;
+  id: number;
+  firstName: string;
+  lastName: string;
+  documentTypeName: string;
+  document: string;
   phone: string;
   court: string;
-  dateTime: string;
+  date: string;
+  time: string;
   total: number;
   paid: number;
+  transactionId: string;
   balance: number;
+  discount: number;
+  observations: string;
 }
 
 export interface ReportPendingBalancesListResponse {

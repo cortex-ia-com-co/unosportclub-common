@@ -1,18 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { ReportFilterParams, ReportListMeta, ReportListResponse } from './report.interface';
 import type {
-  ReportClientsRow,
   ReportClientsListResponse,
+  ReportClientsRow,
   ReportClientsSummaryResponse,
-  ReportSalesListResponse,
-  ReportSalesSummaryResponse,
-  ReportReservationsListResponse,
-  ReportReservationsSummaryResponse,
-  ReportUtilisationListResponse,
-  ReportUtilisationSummaryResponse,
   ReportPendingBalanceRow,
   ReportPendingBalancesListResponse,
   ReportPendingBalancesSummaryResponse,
+  ReportBookingBreakdownResponse,
+  ReportReservationsListResponse,
+  ReportReservationsSummaryResponse,
+  ReportSalesListResponse,
+  ReportSalesSummaryResponse,
+  ReportUtilisationListResponse,
+  ReportUtilisationSummaryResponse,
 } from './reports.interface';
 
 describe('reports.interface', () => {
@@ -31,30 +32,71 @@ describe('reports.interface', () => {
 
   it('ReportListResponse generic compiles with ReportClientsRow', () => {
     const response: ReportListResponse<ReportClientsRow> = {
-      data: [{ period: '2025-01', periodLabel: 'Ene 2025', count: 5 }],
+      data: [
+        {
+          id: 1,
+          firstName: 'Ana',
+          lastName: 'López',
+          documentTypeName: 'CC',
+          document: '123',
+          phone: '3001234567',
+          registrationDate: '2025-01-15',
+          address: 'Calle 1',
+        },
+      ],
       meta: { total: 1, limit: 20, offset: 0 },
     };
     expect(response.data).toHaveLength(1);
-    expect(response.data[0].count).toBe(5);
+    expect(response.data[0].document).toBe('123');
   });
 
   it('ReportClientsListResponse and ReportClientsSummaryResponse', () => {
     const list: ReportClientsListResponse = {
-      data: [{ period: '2025-01', periodLabel: 'Ene', count: 3 }],
+      data: [
+        {
+          id: 2,
+          firstName: 'Luis',
+          lastName: 'Pérez',
+          documentTypeName: 'CE',
+          document: '456',
+          phone: '3109876543',
+          registrationDate: '2025-02-01',
+          address: '',
+        },
+      ],
       meta: { total: 1, limit: 20, offset: 0 },
     };
     const summary: ReportClientsSummaryResponse = { total: 3 };
-    expect(list.data[0].periodLabel).toBe('Ene');
+    expect(list.data[0].firstName).toBe('Luis');
     expect(summary.total).toBe(3);
   });
 
   it('ReportSalesListResponse and ReportSalesSummaryResponse', () => {
     const list: ReportSalesListResponse = {
-      data: [{ date: '2025-01-01', concept: 'Court', amount: 50 }],
+      data: [
+        {
+          id: 1,
+          date: '2025-01-01',
+          time: '10:00:00',
+          concept: 'Court A',
+          firstName: 'Ana',
+          lastName: 'Ruiz',
+          documentTypeName: 'CC',
+          document: '123',
+          phone: '300',
+          totalAmount: 50,
+          paymentTypeName: 'Efectivo',
+          transactionId: 'tx-1',
+          discount: 0,
+          observations: '',
+          operatorName: 'Op',
+          reservationId: 9,
+        },
+      ],
       meta: { total: 1, limit: 20, offset: 0 },
     };
     const summary: ReportSalesSummaryResponse = { amountGenerated: 100, paymentsDone: 80, differential: 20 };
-    expect(list.data[0].amount).toBe(50);
+    expect(list.data[0].totalAmount).toBe(50);
     expect(summary.differential).toBe(20);
   });
 
@@ -66,6 +108,23 @@ describe('reports.interface', () => {
     const summary: ReportReservationsSummaryResponse = { active: 5, pending: 2, cancelled: 0 };
     expect(list.data[0].statusKey).toBe('active');
     expect(summary.pending).toBe(2);
+  });
+
+  it('ReportBookingBreakdownResponse', () => {
+    const breakdown: ReportBookingBreakdownResponse = {
+      data: [
+        {
+          periodLabel: '2025-03-01',
+          reservationTypeName: 'Por hora',
+          active: 2,
+          pending: 1,
+          cancelled: 0,
+        },
+      ],
+      meta: { total: 1, limit: 500, offset: 0 },
+    };
+    expect(breakdown.data[0].reservationTypeName).toBe('Por hora');
+    expect(breakdown.data[0].active).toBe(2);
   });
 
   it('ReportUtilisationListResponse and ReportUtilisationSummaryResponse', () => {
@@ -95,13 +154,21 @@ describe('reports.interface', () => {
     const list: ReportPendingBalancesListResponse = {
       data: [
         {
-          clientName: 'John',
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          documentTypeName: 'CC',
+          document: '1',
           phone: '+1',
           court: 'Court 1',
-          dateTime: '2025-01-01T10:00:00',
+          date: '2025-01-01',
+          time: '10:00:00',
           total: 100,
           paid: 50,
+          transactionId: 'tx-1',
           balance: 50,
+          discount: 0,
+          observations: '',
         },
       ],
       meta: { total: 1, limit: 20, offset: 0 },
