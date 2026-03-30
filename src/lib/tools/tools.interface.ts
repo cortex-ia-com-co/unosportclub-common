@@ -13,7 +13,6 @@ export interface ClientCreateDataInterface {
   document_type_id: number;
   address?: string;
   email?: string;
-  display_name?: string;
   email_verified?: boolean;
   phone?: string;
   document_type_name?: string;
