@@ -65,8 +65,8 @@ export interface DashboardChartsInterface {
     total: number;
     data: Array<{
       date: string;
-      income: number;
-      payments: number;
+      efectivo: number;
+      transferencias: number;
     }>;
   };
   reservationStatus: {
@@ -74,7 +74,6 @@ export interface DashboardChartsInterface {
       day: string;
       active: number;
       pending: number;
-      cancelled: number;
     }>;
   };
   heatmap: {
