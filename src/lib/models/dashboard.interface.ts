@@ -56,6 +56,25 @@ export interface PaymentStatsInterface {
   orphan_payments: number;
 }
 
+export interface DashboardHeatmapCellInterface {
+  day: string;
+  hour: number;
+  level: 'BAJA' | 'MEDIA' | 'ALTA' | 'SATURADO';
+  count: number;
+}
+
+export interface DashboardHeatmapGroupInterface {
+  court_type_id: number;
+  court_type_name: string;
+  data: DashboardHeatmapCellInterface[];
+}
+
+export interface DashboardHeatmapResponseInterface {
+  grouped: boolean;
+  data?: DashboardHeatmapCellInterface[];
+  groups?: DashboardHeatmapGroupInterface[];
+}
+
 export interface DashboardChartsInterface {
   usageDistribution: {
     futbol: number;
@@ -76,12 +95,5 @@ export interface DashboardChartsInterface {
       pending: number;
     }>;
   };
-  heatmap: {
-    data: Array<{
-      day: string;
-      hour: number;
-      level: 'BAJA' | 'MEDIA' | 'ALTA' | 'SATURADO';
-      count: number;
-    }>;
-  };
+  heatmap: DashboardHeatmapResponseInterface;
 }
