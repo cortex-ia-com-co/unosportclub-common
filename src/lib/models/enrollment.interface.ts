@@ -15,6 +15,8 @@ export interface EnrollmentInterface {
   payment_type_id?: number | null;
   payment_amount?: number | null;
   payment_reference?: string | null;
+  payment_expected_amount?: number | null;
+  payment_approved_amount?: number | null;
   student?: StudentInterface;
   training_class?: TrainingClassInterface;
 }
